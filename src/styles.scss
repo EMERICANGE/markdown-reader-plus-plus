@@ -192,6 +192,11 @@ html, body {
   border: 0;
 }
 
+.app-layout.drag-over {
+  outline: 3px dashed var(--primary-color);
+  outline-offset: -3px;
+}
+
 .drop-zone {
   border: 2px dashed var(--surface-border, #dee2e6);
   border-radius: 8px;

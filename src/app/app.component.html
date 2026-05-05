@@ -1,4 +1,8 @@
-<div class="app-layout">
+<div class="app-layout"
+  [class.drag-over]="dragOver()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave()"
+  (drop)="onDrop($event)">
   <p-toolbar class="app-toolbar">
     <ng-template pTemplate="start">
       <app-file-loader></app-file-loader>

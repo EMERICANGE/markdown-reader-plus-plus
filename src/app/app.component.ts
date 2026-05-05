@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ViewChild } from '@angular/core';
 import { ToolbarModule } from 'primeng/toolbar';
 import { ButtonModule } from 'primeng/button';
 import { SharedModule } from 'primeng/api';
@@ -25,7 +25,10 @@ import { SearchBarComponent } from './components/search-bar/search-bar.component
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
+  @ViewChild(FileLoaderComponent) fileLoader!: FileLoaderComponent;
+
   darkTheme = signal(false);
+  dragOver = signal(false);
 
   toggleTheme(): void {
     this.darkTheme.update(v => !v);
@@ -38,5 +41,20 @@ export class AppComponent {
       document.body.classList.remove('dark-theme');
       themeLink.href = themeLink.href.replace('lara-dark-blue', 'lara-light-blue');
     }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.dragOver.set(true);
+  }
+
+  onDragLeave(): void {
+    this.dragOver.set(false);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.dragOver.set(false);
+    this.fileLoader.onDrop(event);
   }
 }
