@@ -1,0 +1,30 @@
+<div class="app-layout">
+  <p-toolbar class="app-toolbar">
+    <ng-template pTemplate="start">
+      <app-file-loader></app-file-loader>
+    </ng-template>
+    <ng-template pTemplate="center">
+      <app-search-bar></app-search-bar>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button
+        [icon]="darkTheme() ? 'pi pi-sun' : 'pi pi-moon'"
+        [rounded]="true"
+        [text]="true"
+        (onClick)="toggleTheme()">
+      </p-button>
+    </ng-template>
+  </p-toolbar>
+
+  <aside class="toc-sidebar">
+    <app-toc-sidebar></app-toc-sidebar>
+  </aside>
+
+  <main class="main-content">
+    <app-markdown-viewer></app-markdown-viewer>
+  </main>
+
+  <aside class="file-sidebar">
+    <app-file-sidebar></app-file-sidebar>
+  </aside>
+</div>

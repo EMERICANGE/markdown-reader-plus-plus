@@ -1,10 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { ConfirmationService } from 'primeng/api';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [AppComponent, NoopAnimationsModule],
+      providers: [ConfirmationService],
     }).compileComponents();
   });
 
@@ -14,16 +17,9 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'markdown-viewer' title`, () => {
+  it('should have darkTheme signal defaulting to false', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('markdown-viewer');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Markdown Viewer');
+    expect(app.darkTheme()).toBeFalse();
   });
 });
