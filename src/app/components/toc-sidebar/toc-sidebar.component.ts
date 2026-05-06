@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TreeModule } from 'primeng/tree';
 import { TreeNode } from 'primeng/api';
@@ -16,6 +16,8 @@ import { TocHeading } from '../../models/markdown-file.model';
     } @else {
       <p-tree
         [value]="treeNodes()"
+        selectionMode="single"
+        [(selection)]="selectedNode"
         [style]="{'border': 'none', 'padding': '0'}"
         (onNodeSelect)="onNodeClick($event)">
       </p-tree>
@@ -28,6 +30,7 @@ import { TocHeading } from '../../models/markdown-file.model';
 })
 export class TocSidebarComponent {
   private markdownService = inject(MarkdownService);
+  selectedNode: TreeNode | null = null;
 
   treeNodes = computed<TreeNode[]>(() => {
     const headings = this.markdownService.headings();
@@ -37,8 +40,14 @@ export class TocSidebarComponent {
   onNodeClick(event: { node: TreeNode }): void {
     const id = event.node.data;
     const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+    if (!element) return;
+
+    const container = document.querySelector('.main-content');
+    if (container) {
+      const elementRect = element.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const offset = elementRect.top - containerRect.top + container.scrollTop;
+      container.scrollTo({ top: offset - 16, behavior: 'smooth' });
     }
   }
 

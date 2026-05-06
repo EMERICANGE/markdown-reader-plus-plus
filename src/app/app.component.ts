@@ -36,10 +36,10 @@ export class AppComponent {
 
     if (this.darkTheme()) {
       document.body.classList.add('dark-theme');
-      themeLink.href = themeLink.href.replace('lara-light-blue', 'lara-dark-blue');
+      themeLink.href = 'themes/lara-dark-blue/theme.css';
     } else {
       document.body.classList.remove('dark-theme');
-      themeLink.href = themeLink.href.replace('lara-dark-blue', 'lara-light-blue');
+      themeLink.href = 'themes/lara-light-blue/theme.css';
     }
   }
 

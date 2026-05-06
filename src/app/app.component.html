@@ -5,6 +5,10 @@
   (drop)="onDrop($event)">
   <p-toolbar class="app-toolbar">
     <ng-template pTemplate="start">
+      <div class="toolbar-brand">
+        <i class="pi pi-book" style="font-size: 1.25rem; color: var(--hi-primary);"></i>
+        <span class="toolbar-title">Markdown Viewer</span>
+      </div>
       <app-file-loader></app-file-loader>
     </ng-template>
     <ng-template pTemplate="center">
