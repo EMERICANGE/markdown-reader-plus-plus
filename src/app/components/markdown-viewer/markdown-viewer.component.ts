@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, ElementRef, AfterViewInit, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Marked } from 'marked';
@@ -11,10 +11,11 @@ import { MarkdownService } from '../../services/markdown.service';
   imports: [CommonModule],
   template: `
     @if (!activeFile()) {
-      <div class="flex align-items-center justify-content-center h-full">
-        <div class="text-center text-500">
-          <i class="pi pi-file text-6xl mb-3"></i>
+      <div class="empty-state flex align-items-center justify-content-center h-full">
+        <div class="text-center">
+          <i class="pi pi-file-edit"></i>
           <p>Chargez un fichier Markdown pour commencer</p>
+          <span class="hint">Glissez-déposez un fichier .md ou utilisez le bouton Charger</span>
         </div>
       </div>
     } @else {
@@ -26,37 +27,29 @@ import { MarkdownService } from '../../services/markdown.service';
       display: block;
       height: 100%;
     }
-    .markdown-body {
-      line-height: 1.6;
-    }
-    :host ::ng-deep .markdown-body pre {
-      background: var(--surface-ground);
-      padding: 1rem;
-      border-radius: 6px;
-      overflow-x: auto;
-    }
-    :host ::ng-deep .markdown-body code {
-      font-family: 'Fira Code', monospace;
-      font-size: 0.9em;
-    }
-    :host ::ng-deep .markdown-body table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-    :host ::ng-deep .markdown-body th,
-    :host ::ng-deep .markdown-body td {
-      border: 1px solid var(--surface-border);
-      padding: 0.5rem;
-    }
-    :host ::ng-deep .markdown-body img {
-      max-width: 100%;
+    .empty-state {
+      .text-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      i {
+        font-size: 4rem;
+      }
+      .hint {
+        color: var(--hi-text-tertiary);
+        font-size: 0.85rem;
+      }
     }
   `],
 })
-export class MarkdownViewerComponent {
+export class MarkdownViewerComponent implements AfterViewInit, OnDestroy {
   private markdownService = inject(MarkdownService);
   private sanitizer = inject(DomSanitizer);
+  private el = inject(ElementRef);
   private markedInstance = new Marked();
+  private clickListener: ((e: Event) => void) | null = null;
 
   activeFile = this.markdownService.activeFile;
 
@@ -76,22 +69,71 @@ export class MarkdownViewerComponent {
         heading({ text, depth }: { text: string; depth: number }): string {
           const id = text
             .toLowerCase()
-            .replace(/[^\w\s-]/g, '')
+            .replace(/[^\p{L}\p{N}\s-]/gu, '')
             .replace(/\s+/g, '-')
             .replace(/-+/g, '-')
             .trim();
-          return `<h${depth} id="${id}">${text}</h${depth}>`;
+          return `<h${depth} id="${id}">${text}</h${depth}>\n`;
         },
         code({ text, lang }: { text: string; lang?: string }): string {
+          const language = lang || 'plaintext';
+          let highlighted: string;
           if (lang && hljs.getLanguage(lang)) {
-            const highlighted = hljs.highlight(text, { language: lang }).value;
-            return `<pre><code class="hljs language-${lang}">${highlighted}</code></pre>`;
+            highlighted = hljs.highlight(text, { language: lang }).value;
+          } else {
+            highlighted = hljs.highlightAuto(text).value;
           }
-          const highlighted = hljs.highlightAuto(text).value;
-          return `<pre><code class="hljs">${highlighted}</code></pre>`;
+          return `<div class="terminal-block">
+            <div class="terminal-header">
+              <div class="terminal-dots">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <span class="terminal-title">${language}</span>
+              <div class="terminal-spacer"></div>
+            </div>
+            <pre class="terminal-pre"><code class="hljs language-${language}">${highlighted}</code></pre>
+          </div>\n`;
         },
       },
     });
+  }
+
+  ngAfterViewInit(): void {
+    this.clickListener = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (!anchor) return;
+
+      const href = anchor.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = decodeURIComponent(href.substring(1));
+        this.scrollToId(id);
+      }
+    };
+    this.el.nativeElement.addEventListener('click', this.clickListener);
+  }
+
+  ngOnDestroy(): void {
+    if (this.clickListener) {
+      this.el.nativeElement.removeEventListener('click', this.clickListener);
+    }
+  }
+
+  scrollToId(id: string): void {
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    const container = document.querySelector('.main-content');
+    if (container) {
+      const elementRect = element.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const scrollOffset = elementRect.top - containerRect.top + container.scrollTop - 16;
+      container.scrollTo({ top: scrollOffset, behavior: 'smooth' });
+    }
   }
 
   private renderMarkdown(content: string): string {

@@ -8,17 +8,34 @@ import { MarkdownService } from '../../services/markdown.service';
   standalone: true,
   imports: [FormsModule, InputTextModule],
   template: `
-    <span class="p-input-icon-left">
+    <span class="p-input-icon-left search-container">
       <i class="pi pi-search"></i>
       <input
         type="text"
         pInputText
-        placeholder="Rechercher..."
+        placeholder="Rechercher dans le document..."
         [ngModel]="searchValue"
         (ngModelChange)="onSearch($event)"
+        class="search-input"
       />
     </span>
   `,
+  styles: [`
+    .search-container {
+      min-width: 280px;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--hi-bg-neutral) !important;
+      border-color: transparent !important;
+      transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .search-input:focus {
+      background: var(--hi-bg) !important;
+      border-color: var(--hi-primary) !important;
+      box-shadow: 0 0 0 3px var(--hi-primary-subtle) !important;
+    }
+  `],
 })
 export class SearchBarComponent {
   private markdownService = inject(MarkdownService);
