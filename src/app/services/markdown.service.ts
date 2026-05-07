@@ -6,10 +6,14 @@ export class MarkdownService {
   private _files = signal<MarkdownFile[]>([]);
   private _activeFile = signal<MarkdownFile | null>(null);
   private _searchTerm = signal<string>('');
+  private _editMode = signal<boolean>(false);
+  private _draftContent = signal<string>('');
 
   readonly files = this._files.asReadonly();
   readonly activeFile = this._activeFile.asReadonly();
   readonly searchTerm = this._searchTerm.asReadonly();
+  readonly editMode = this._editMode.asReadonly();
+  readonly draftContent = this._draftContent.asReadonly();
 
   readonly headings = computed<TocHeading[]>(() => {
     const file = this._activeFile();
@@ -38,6 +42,24 @@ export class MarkdownService {
 
   setSearchTerm(term: string): void {
     this._searchTerm.set(term);
+  }
+
+  toggleEditMode(): void {
+    this._editMode.update(v => !v);
+    if (this._editMode()) {
+      const file = this._activeFile();
+      if (file) {
+        this._draftContent.set(file.content);
+      }
+    }
+  }
+
+  setEditMode(value: boolean): void {
+    this._editMode.set(value);
+  }
+
+  setDraftContent(content: string): void {
+    this._draftContent.set(content);
   }
 
   private extractHeadings(content: string): TocHeading[] {
