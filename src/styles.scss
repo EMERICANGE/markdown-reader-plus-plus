@@ -591,17 +591,24 @@ app-editor-status-bar {
 
 /* ===== Drag & Drop ===== */
 .app-layout.drag-over {
-  outline: 3px dashed var(--hi-primary);
-  outline-offset: -3px;
-
-  .main-content::after {
-    content: '';
-    position: absolute;
+  &::after {
+    content: 'Déposez vos fichiers .md ici';
+    position: fixed;
     inset: 0;
-    background: var(--hi-primary-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(41, 154, 141, 0.08);
+    border: 3px dashed var(--hi-primary);
     border-radius: var(--hi-radius);
-    z-index: 10;
+    z-index: 9999;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--hi-primary);
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(2px);
     animation: fadeIn 0.2s ease-out;
+    pointer-events: none;
   }
 }
 
