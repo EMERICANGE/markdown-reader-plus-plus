@@ -1,0 +1,86 @@
+<p-dialog
+  header="Exporter en PDF"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [closable]="true"
+  [draggable]="false">
+
+  <!-- Style Selection -->
+  <div class="export-section">
+    <label class="section-label">Style d'export</label>
+    <div class="style-options">
+      <div class="style-card" [class.selected]="style === 'web'" (click)="style = 'web'">
+        <p-radioButton name="style" value="web" [(ngModel)]="style"></p-radioButton>
+        <div class="style-info">
+          <span class="style-title">Style Web</span>
+          <span class="style-desc">Fidèle à l'affichage dans l'app</span>
+        </div>
+        <div class="style-preview web-preview">
+          <div class="preview-heading">Titre</div>
+          <div class="preview-text">Texte avec <span class="preview-link">lien</span></div>
+          <div class="preview-code-web">code</div>
+        </div>
+      </div>
+
+      <div class="style-card" [class.selected]="style === 'document'" (click)="style = 'document'">
+        <p-radioButton name="style" value="document" [(ngModel)]="style"></p-radioButton>
+        <div class="style-info">
+          <span class="style-title">Style Document</span>
+          <span class="style-desc">Sobre et imprimable</span>
+        </div>
+        <div class="style-preview doc-preview">
+          <div class="preview-heading">Titre</div>
+          <div class="preview-text">Texte avec <span class="preview-link">lien</span></div>
+          <div class="preview-code-doc">code</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Options -->
+  <div class="export-section">
+    <label class="section-label">Options</label>
+    <div class="options-grid">
+      <div class="option-field">
+        <label>Format de page</label>
+        <p-dropdown [options]="pageFormats" [(ngModel)]="pageFormat" optionLabel="label" optionValue="value"></p-dropdown>
+      </div>
+      <div class="option-field">
+        <label>Orientation</label>
+        <p-dropdown [options]="orientations" [(ngModel)]="orientation" optionLabel="label" optionValue="value"></p-dropdown>
+      </div>
+    </div>
+
+    <div class="checkboxes">
+      <div class="checkbox-row">
+        <p-checkbox [(ngModel)]="includeToc" [binary]="true" inputId="toc"></p-checkbox>
+        <label for="toc">Inclure la table des matières en première page</label>
+      </div>
+      <div class="checkbox-row">
+        <p-checkbox [(ngModel)]="pageNumbers" [binary]="true" inputId="pageNumbers"></p-checkbox>
+        <label for="pageNumbers">Numéros de page en pied de page</label>
+      </div>
+      <div class="checkbox-row">
+        <p-checkbox [(ngModel)]="headerFileName" [binary]="true" inputId="header"></p-checkbox>
+        <label for="header">Nom du fichier en en-tête</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filename -->
+  <div class="export-section">
+    <label class="section-label">Nom du fichier</label>
+    <div class="filename-field">
+      <input type="text" pInputText [(ngModel)]="fileName" class="filename-input">
+      <span class="filename-ext">.pdf</span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" [text]="true" (onClick)="close()"></p-button>
+    <p-button label="Exporter PDF" icon="pi pi-download" (onClick)="exportPdf()" [loading]="exporting()"></p-button>
+  </ng-template>
+</p-dialog>
