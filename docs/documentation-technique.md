@@ -7,26 +7,36 @@
 | Technologie | Version | Role |
 |-------------|---------|------|
 | Angular | 18.2 | Framework SPA, standalone components, signals |
-| PrimeNG | 17.18 | Composants UI (Tree, Listbox, Toolbar, ConfirmDialog) |
+| PrimeNG | 17.18 | Composants UI (Tree, Listbox, Toolbar, Dialog, etc.) |
 | PrimeFlex | 4.x | Utilitaires CSS flexbox/grid |
 | PrimeIcons | 7.x | Bibliothèque d'icônes |
 | marked | 18.x | Parsing Markdown vers HTML |
 | highlight.js | 11.x | Coloration syntaxique des blocs de code |
+| TipTap | 2.27 | Éditeur WYSIWYG (basé ProseMirror) |
+| ngx-tiptap | 11.x | Bindings Angular pour TipTap |
+| tiptap-markdown | 0.8 | Sérialisation TipTap ↔ Markdown |
+| Mermaid | latest | Rendu de diagrammes |
+| KaTeX | latest | Rendu de formules LaTeX |
+| idb | latest | Wrapper IndexedDB pour auto-save |
 
 ### Architecture Applicative
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                        AppComponent                           │
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │                    PrimeNG Toolbar                       │ │
-│  │  [FileLoader] [SearchBar]              [ThemeToggle]    │ │
-│  └─────────────────────────────────────────────────────────┘ │
-│  ┌────────────┬──────────────────────────┬─────────────────┐ │
-│  │ TocSidebar │    MarkdownViewer        │  FileSidebar    │ │
-│  │  (Tree)    │    (Rendu HTML)          │  (Listbox)      │ │
-│  └────────────┴──────────────────────────┴─────────────────┘ │
-└──────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│                             AppComponent                               │
+│  ┌─────────────────────────────────────────────────────────────────┐  │
+│  │                    PrimeNG Toolbar                               │  │
+│  │  [FileLoader] [SearchBar]       [Edit] [PDF] [ThemeToggle]     │  │
+│  └─────────────────────────────────────────────────────────────────┘  │
+│  ┌────────────┬─────────────────────────────────────┬──────────────┐  │
+│  │ TocSidebar │  Mode Lecture: MarkdownViewer       │ FileSidebar  │  │
+│  │  (Tree)    │  Mode Édition: Editor | Preview     │ (Listbox)    │  │
+│  └────────────┴─────────────────────────────────────┴──────────────┘  │
+│  ┌─────────────────────────────────────────────────────────────────┐  │
+│  │  EditorStatusBar (mode édition uniquement)                      │  │
+│  └─────────────────────────────────────────────────────────────────┘  │
+│  PdfExportDialogComponent (modal)                                     │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Pattern de Communication
@@ -41,7 +51,12 @@ SearchBarComponent ──setSearchTerm()─────┤
                     ──setActive()─────────┤
                                          │
                                          ├──► headings() ──► TocSidebarComponent
-                                         └──► activeFile() ──► MarkdownViewerComponent
+                                         ├──► activeFile() ──► MarkdownViewerComponent
+                                         ├──► editMode() ──► AppComponent (split view)
+                                         └──► draftContent() ──► MarkdownViewerComponent (preview)
+
+EditorService ──── auto-save IndexedDB ◄── draftContent()
+PdfService ──── iframe print ◄── contentElement
 ```
 
 ## 2. Structure du Projet
@@ -55,15 +70,21 @@ markdown-viewer/
 ├── src/
 │   ├── app/
 │   │   ├── components/
-│   │   │   ├── file-loader/       # Chargement fichiers/dossiers + drag & drop
-│   │   │   ├── file-sidebar/      # Sidebar droite : liste des fichiers
-│   │   │   ├── markdown-viewer/   # Zone centrale : rendu Markdown
-│   │   │   ├── search-bar/        # Barre de recherche
-│   │   │   └── toc-sidebar/       # Sidebar gauche : table des matières
+│   │   │   ├── editor-status-bar/      # Barre d'état (sauvegarde, curseur, taille)
+│   │   │   ├── file-loader/            # Chargement fichiers/dossiers + drag & drop
+│   │   │   ├── file-sidebar/           # Sidebar droite : liste des fichiers
+│   │   │   ├── markdown-editor/        # Éditeur WYSIWYG TipTap
+│   │   │   │   └── extensions/         # Extensions custom (Mermaid, KaTeX, Embed, Slash)
+│   │   │   ├── markdown-viewer/        # Zone centrale : rendu Markdown
+│   │   │   ├── pdf-export-dialog/      # Modal d'export PDF
+│   │   │   ├── search-bar/             # Barre de recherche
+│   │   │   └── toc-sidebar/            # Sidebar gauche : table des matières
 │   │   ├── models/
 │   │   │   └── markdown-file.model.ts  # Interfaces MarkdownFile, TocHeading
 │   │   ├── services/
-│   │   │   └── markdown.service.ts     # Service central (state management)
+│   │   │   ├── markdown.service.ts     # Service central (state management)
+│   │   │   ├── editor.service.ts       # Gestion éditeur (auto-save, IndexedDB)
+│   │   │   └── pdf.service.ts          # Export PDF (iframe print)
 │   │   ├── app.component.ts/html/scss  # Composant racine + layout
 │   │   └── app.config.ts               # Configuration Angular
 │   ├── styles.scss                # Styles globaux + design system
@@ -95,6 +116,8 @@ State management via Angular Signals :
 | `files()` | `MarkdownFile[]` | Liste de tous les fichiers chargés |
 | `activeFile()` | `MarkdownFile \| null` | Fichier actuellement affiché |
 | `searchTerm()` | `string` | Terme de recherche actif |
+| `editMode()` | `boolean` | Mode édition actif/inactif |
+| `draftContent()` | `string` | Contenu markdown en cours d'édition |
 | `headings()` | `TocHeading[]` | Computed : headings extraits du fichier actif |
 | `filteredFiles()` | `MarkdownFile[]` | Computed : fichiers filtrés par nom |
 
@@ -103,6 +126,31 @@ Méthodes :
 - `replaceFiles(files)` : remplace tous les fichiers
 - `setActive(file)` : définit le fichier actif
 - `setSearchTerm(term)` : met à jour le terme de recherche
+- `toggleEditMode()` : bascule mode édition (initialise draftContent depuis activeFile)
+- `setEditMode(value)` : définit le mode édition directement
+- `setDraftContent(content)` : met à jour le contenu du brouillon
+
+### EditorService
+
+**Fichier :** `src/app/services/editor.service.ts`
+
+Gestion de l'état de l'éditeur et persistance :
+- Auto-save IndexedDB toutes les 5 secondes
+- Signaux `saveStatus` et `cursorPosition`
+- Méthodes `loadDraft()`, `deleteDraft()`, `downloadMarkdown()`
+- Base de données `markdown-editor-drafts` avec object store `drafts`
+
+### PdfService
+
+**Fichier :** `src/app/services/pdf.service.ts`
+
+Export PDF via iframe + `window.print()` :
+- Clone le contenu HTML du viewer
+- Injecte dans un iframe caché avec CSS d'impression dédiée
+- Supporte deux styles (Web terminal / Document sobre)
+- CSS `print-color-adjust: exact` pour préserver les backgrounds
+- Génère une TOC avec liens ancres fonctionnels
+- Coloration syntaxique highlight.js préservée dans le PDF
 
 ### MarkdownViewerComponent
 
@@ -111,9 +159,37 @@ Méthodes :
 - Utilise une instance `Marked` avec renderer custom :
   - **Headings** : génère des `id` slugifiés (compatible Unicode/accents)
   - **Code blocks** : wrapper `.terminal-block` avec header macOS + highlight.js
+- Accepte un input optionnel `previewContent` pour le mode live preview (éditeur)
 - Intercepte les clics sur les liens `#anchor` via `addEventListener` natif
 - Scroll programmatique vers `.main-content` (pas `scrollIntoView`)
 - Surbrillance des termes de recherche dans le HTML rendu (regex negative lookahead pour éviter les tags)
+
+### MarkdownEditorComponent
+
+**Fichier :** `src/app/components/markdown-editor/markdown-editor.component.ts`
+
+Éditeur WYSIWYG basé sur TipTap :
+- Extensions : StarterKit, Table, TaskList, Link, Image, Underline, TextStyle, Color, Highlight, CodeBlockLowlight, Placeholder, Markdown, + extensions custom
+- Toolbar fixe avec groupes de boutons (Texte, Format, Listes, Blocs, Insertion, Actions)
+- BubbleMenu flottant sur sélection de texte
+- Sérialisation TipTap → Markdown via `tiptap-markdown`
+- Synchronisation avec `MarkdownService.draftContent` à chaque modification
+
+**Extensions custom** (`extensions/`) :
+- `mermaid.extension.ts` : NodeView pour diagrammes Mermaid (import dynamique)
+- `katex.extension.ts` : NodeView pour formules LaTeX (import dynamique)
+- `embed.extension.ts` : NodeView pour iframes/vidéos
+- `slash-commands.extension.ts` : Menu contextuel sur `/` avec 14 types de blocs
+
+### PdfExportDialogComponent
+
+**Fichier :** `src/app/components/pdf-export-dialog/pdf-export-dialog.component.ts`
+
+Modal PrimeNG avec :
+- Sélection du style (Web/Document) avec radio buttons et mini-preview
+- Dropdowns format de page et orientation
+- Checkboxes (TOC, numéros de page, en-tête)
+- Champ nom de fichier
 
 ### TocSidebarComponent
 

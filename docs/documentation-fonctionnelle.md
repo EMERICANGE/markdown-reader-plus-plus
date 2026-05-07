@@ -79,24 +79,107 @@ Les liens internes dans le Markdown (format `[texte](#section)`) fonctionnent :
 - Thème sombre : fond dark, texte clair, adapté pour la lecture prolongée
 - Transition animée entre les deux thèmes (0.4 seconde)
 
+### 2.9 Éditeur WYSIWYG
+
+L'application dispose d'un éditeur visuel de type Word/Notion, activable via le bouton crayon dans la toolbar.
+
+**Mode édition — Split View :**
+- Panneau gauche : éditeur WYSIWYG (TipTap)
+- Panneau droit : aperçu en temps réel du rendu Markdown
+- Barre de statut : état de sauvegarde, position du curseur, taille du fichier
+
+**Barre d'outils fixe :**
+
+| Groupe | Actions |
+|--------|---------|
+| Texte | H1, H2, H3 |
+| Format | Gras, Italique, Souligné, Barré, Couleur, Surlignage |
+| Listes | À puces, Numérotée, Checklist |
+| Blocs | Citation, Bloc de code, Tableau, Séparateur |
+| Insertion | Image, Lien, Diagramme Mermaid, Formule LaTeX, Embed vidéo |
+| Actions | Annuler, Rétablir, Télécharger .md |
+
+**Menu flottant (BubbleMenu) :**
+- Apparaît à la sélection de texte
+- Accès rapide : Gras, Italique, Souligné, Lien, Code
+
+**Slash Commands :**
+- Tapez `/` pour ouvrir un menu contextuel d'insertion rapide
+- Navigation au clavier (flèches + Entrée)
+- 14 types de blocs disponibles
+
+**Blocs spéciaux :**
+- **Diagrammes Mermaid** : rendu en temps réel, éditable
+- **Formules LaTeX** : rendu via KaTeX, éditable
+- **Embeds vidéo** : iframe avec URL personnalisable
+
+**Sauvegarde automatique :**
+- Auto-save dans IndexedDB toutes les 5 secondes
+- Indicateur visuel de l'état de sauvegarde
+- Récupération de brouillon au rechargement
+- Téléchargement du fichier `.md` modifié à tout moment
+
+### 2.10 Export PDF
+
+L'export PDF est accessible via le bouton PDF dans la toolbar.
+
+**Deux styles d'export :**
+
+| | Style Web | Style Document |
+|---|---|---|
+| Apparence | Fidèle à l'affichage dans l'app | Sobre, adapté à l'impression |
+| Code | Terminal sombre, dots RGB, coloration syntaxique | Fond clair, bordure, monospace |
+| Titres | Style teal de l'app | Noir classique |
+| Liens | Teal coloré | Souligné noir |
+
+**Options disponibles :**
+- Format de page : A4, Letter
+- Orientation : Portrait, Paysage
+- Table des matières en première page (avec liens cliquables vers les sections)
+- Numéros de page en pied de page
+- Nom du fichier en en-tête
+- Nom du fichier PDF personnalisable
+
+**Liens ancres dans le PDF :**
+- Les liens internes (`#section`) restent fonctionnels dans le PDF
+- La table des matières est cliquable (navigation interne au document)
+
 ## 3. Interface utilisateur
 
-### Layout
+### Layout — Mode Lecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  [Logo] [Charger] [Dossier]  |  [Rechercher...]  |  [☀/🌙] │
-├──────────────┬──────────────────────────┬───────────────────┤
-│              │                          │                   │
-│  TABLE DES   │                          │  FICHIERS         │
-│  MATIÈRES    │     CONTENU MARKDOWN     │                   │
-│              │                          │  [Filtre...]      │
-│  - Titre 1   │                          │  ─────────────    │
-│    - Sous 1  │                          │  readme.md        │
-│    - Sous 2  │                          │  guide.md ●       │
-│  - Titre 2   │                          │  api.md           │
-│              │                          │                   │
-└──────────────┴──────────────────────────┴───────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│  [Logo] [Charger] [Dossier]  |  [Rechercher...]  |  [✏] [PDF] [☀/🌙] │
+├──────────────┬──────────────────────────┬────────────────────────┤
+│              │                          │                        │
+│  TABLE DES   │                          │  FICHIERS              │
+│  MATIÈRES    │     CONTENU MARKDOWN     │                        │
+│              │                          │  [Filtre...]           │
+│  - Titre 1   │                          │  ─────────────         │
+│    - Sous 1  │                          │  readme.md             │
+│    - Sous 2  │                          │  guide.md ●            │
+│  - Titre 2   │                          │  api.md                │
+│              │                          │                        │
+└──────────────┴──────────────────────────┴────────────────────────┘
+```
+
+### Layout — Mode Édition
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  [Logo] [Charger] [Dossier]  |  [Rechercher...]  |  [✏ actif] [PDF] [☀/🌙] │
+├──────────────────────────────────────────────────────────────────────┤
+│  [H1][H2][H3] | [B][I][U][S] | [•][1.][☑] | [❝][</>][▦][—] | ...   │
+├────────┬───────────────────┬───┬───────────────────┬─────────────────┤
+│  TOC   │  ÉDITEUR WYSIWYG  │ | │  APERÇU LIVE      │  FICHIERS       │
+│        │                   │ | │                   │                 │
+│  H1    │  # Titre          │ | │  Titre (rendu)    │  readme.md ●    │
+│   H2   │  Texte **gras**   │ | │  Texte gras       │  guide.md       │
+│        │                   │ | │                   │                 │
+├────────┴───────────────────┴───┴───────────────────┴─────────────────┤
+│  ✓ Sauvegardé | Ligne 12, Col 34 | 1.2 KB                            │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Interactions visuelles
@@ -112,11 +195,13 @@ Les liens internes dans le Markdown (format `[texte](#section)`) fonctionnent :
 
 ## 4. Limitations connues
 
-- **Pas de persistance** : les fichiers chargés sont perdus à la fermeture/rechargement de la page
-- **Pas d'édition** : l'application est en lecture seule
+- **Pas de persistance des fichiers** : les fichiers chargés sont perdus à la fermeture (les brouillons d'édition sont sauvegardés dans IndexedDB)
 - **Fichiers volumineux** : les très gros fichiers (>10 Mo) peuvent ralentir le rendu
 - **Navigateur uniquement** : nécessite un navigateur moderne (Chrome, Firefox, Edge, Safari)
 - **webkitdirectory** : le chargement de dossier peut ne pas fonctionner sur tous les navigateurs (Firefox a un support limité)
+- **Export PDF** : nécessite de cocher "Graphiques d'arrière-plan" dans la boîte de dialogue d'impression pour conserver les couleurs des blocs de code
+- **Pas de collaboration** : édition mono-utilisateur uniquement
+- **Pas de création** : il faut charger un fichier .md existant avant de pouvoir éditer
 
 ## 5. Compatibilité navigateur
 
