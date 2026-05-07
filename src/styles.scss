@@ -170,6 +170,64 @@ html, body {
   }
 }
 
+/* ===== Edit Mode Layout ===== */
+.app-layout.edit-mode {
+  grid-template-columns: 220px 1fr 220px;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header header header"
+    "toc split files"
+    "status status status";
+}
+
+.split-view {
+  grid-area: split;
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.editor-panel {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.split-divider {
+  width: 3px;
+  background: var(--hi-primary);
+  cursor: col-resize;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity var(--hi-transition);
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.preview-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background: var(--hi-bg);
+  position: relative;
+}
+
+.panel-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--hi-text-tertiary);
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+app-editor-status-bar {
+  grid-area: status;
+}
+
 /* ===== Search Highlight ===== */
 .search-highlight {
   background-color: var(--hi-primary-subtle);

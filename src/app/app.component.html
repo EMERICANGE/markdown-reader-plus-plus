@@ -1,5 +1,6 @@
 <div class="app-layout"
   [class.drag-over]="dragOver()"
+  [class.edit-mode]="editMode()"
   (dragover)="onDragOver($event)"
   (dragleave)="onDragLeave()"
   (drop)="onDrop($event)">
@@ -16,6 +17,24 @@
     </ng-template>
     <ng-template pTemplate="end">
       <p-button
+        icon="pi pi-pencil"
+        [rounded]="true"
+        [text]="!editMode()"
+        [severity]="editMode() ? undefined : 'secondary'"
+        (onClick)="toggleEditMode()"
+        pTooltip="Mode édition"
+        [disabled]="!activeFile()">
+      </p-button>
+      <p-button
+        icon="pi pi-file-pdf"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        (onClick)="openPdfExport()"
+        pTooltip="Exporter en PDF"
+        [disabled]="!activeFile()">
+      </p-button>
+      <p-button
         [icon]="darkTheme() ? 'pi pi-sun' : 'pi pi-moon'"
         [rounded]="true"
         [text]="true"
@@ -28,11 +47,27 @@
     <app-toc-sidebar></app-toc-sidebar>
   </aside>
 
-  <main class="main-content">
-    <app-markdown-viewer></app-markdown-viewer>
-  </main>
+  @if (editMode()) {
+    <div class="split-view">
+      <div class="editor-panel">
+        <app-markdown-editor></app-markdown-editor>
+      </div>
+      <div class="split-divider"></div>
+      <div class="preview-panel">
+        <div class="panel-label">Aperçu</div>
+        <app-markdown-viewer [previewContent]="draftContent()"></app-markdown-viewer>
+      </div>
+    </div>
+    <app-editor-status-bar></app-editor-status-bar>
+  } @else {
+    <main class="main-content">
+      <app-markdown-viewer></app-markdown-viewer>
+    </main>
+  }
 
   <aside class="file-sidebar">
     <app-file-sidebar></app-file-sidebar>
   </aside>
+
+  <app-pdf-export-dialog></app-pdf-export-dialog>
 </div>
