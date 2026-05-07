@@ -20,6 +20,18 @@ export class PdfService {
 
     const container = document.createElement('div');
     container.innerHTML = contentElement.innerHTML;
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = options.orientation === 'landscape' ? '297mm' : '210mm';
+    container.style.background = '#ffffff';
+    container.style.color = '#111111';
+    container.style.padding = '20px';
+    container.style.fontFamily = 'var(--hi-font), sans-serif';
+    container.style.fontSize = '14px';
+    container.style.lineHeight = '1.6';
+    document.body.appendChild(container);
+
     this.applyStyle(container, options);
 
     if (options.includeToc) {
@@ -31,7 +43,7 @@ export class PdfService {
       margin: options.style === 'document' ? [20, 20, 20, 20] as [number, number, number, number] : [10, 10, 10, 10] as [number, number, number, number],
       filename: options.fileName.endsWith('.pdf') ? options.fileName : `${options.fileName}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
       jsPDF: {
         unit: 'mm',
         format: options.pageFormat,
@@ -40,7 +52,11 @@ export class PdfService {
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     };
 
-    await html2pdf().set(pdfOptions).from(container).save();
+    try {
+      await html2pdf().set(pdfOptions).from(container).save();
+    } finally {
+      document.body.removeChild(container);
+    }
   }
 
   private applyStyle(container: HTMLElement, options: PdfExportOptions): void {
