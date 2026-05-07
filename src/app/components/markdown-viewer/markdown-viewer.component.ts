@@ -1,4 +1,4 @@
-import { Component, inject, computed, ElementRef, AfterViewInit, OnDestroy, effect } from '@angular/core';
+import { Component, inject, computed, ElementRef, AfterViewInit, OnDestroy, effect, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Marked } from 'marked';
@@ -52,11 +52,14 @@ export class MarkdownViewerComponent implements AfterViewInit, OnDestroy {
   private clickListener: ((e: Event) => void) | null = null;
 
   activeFile = this.markdownService.activeFile;
+  previewContent = input<string | undefined>(undefined);
 
   renderedHtml = computed<SafeHtml>(() => {
+    const preview = this.previewContent();
     const file = this.activeFile();
-    if (!file) return '';
-    const html = this.renderMarkdown(file.content);
+    const content = preview ?? file?.content;
+    if (!content) return '';
+    const html = this.renderMarkdown(content);
     const highlighted = this.highlightSearchTerm(html);
     return this.sanitizer.bypassSecurityTrustHtml(highlighted);
   });
