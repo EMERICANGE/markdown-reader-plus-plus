@@ -54,27 +54,71 @@ export class PdfService {
       page-break-after: avoid;
     }
     h1, h2 { margin-top: 1.5em; }
-    pre, code { font-family: "JetBrains Mono", "Fira Code", Consolas, monospace; }
-    pre {
-      background: ${options.style === 'document' ? '#f5f5f5' : '#1a1a2e'};
-      color: ${options.style === 'document' ? '#333' : '#e0e0e0'};
-      padding: 12px;
-      border-radius: 6px;
-      overflow-x: auto;
-      font-size: 9pt;
-      page-break-inside: avoid;
-      ${options.style === 'document' ? 'border: 1px solid #ddd;' : ''}
-    }
+    pre, code { font-family: "JetBrains Mono", "Fira Code", Consolas, monospace; font-size: 9pt; }
+    code { background: ${options.style === 'document' ? '#f0f0f0' : '#2d2d44'}; padding: 2px 5px; border-radius: 3px; font-size: 0.85em; }
+    pre code { background: transparent; padding: 0; border-radius: 0; }
     .terminal-block {
-      background: ${options.style === 'document' ? '#f5f5f5' : '#1a1a2e'};
-      border-radius: 6px;
-      padding: 12px;
-      margin: 1em 0;
+      background: ${options.style === 'document' ? '#f8f8f8' : '#1e1e2e'};
+      border-radius: 8px;
+      margin: 1.2em 0;
       page-break-inside: avoid;
-      ${options.style === 'document' ? 'border: 1px solid #ddd;' : ''}
+      overflow: hidden;
+      ${options.style === 'document' ? 'border: 1px solid #e0e0e0;' : 'border: 1px solid #333;'}
     }
-    .terminal-header { ${options.style === 'document' ? 'display: none;' : ''} }
-    .terminal-pre { margin: 0; background: transparent; border: none; padding: 0; }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: ${options.style === 'document' ? '#eeeeee' : '#16162a'};
+      border-bottom: 1px solid ${options.style === 'document' ? '#ddd' : '#333'};
+      font-size: 8pt;
+    }
+    .terminal-dots { display: flex; gap: 5px; }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: ${options.style === 'document' ? '#ccc' : '#ff5f56'}; }
+    .dot-yellow { background: ${options.style === 'document' ? '#ccc' : '#ffbd2e'}; }
+    .dot-green { background: ${options.style === 'document' ? '#ccc' : '#27c93f'}; }
+    .terminal-title {
+      color: ${options.style === 'document' ? '#666' : '#888'};
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .terminal-spacer { flex: 1; }
+    .terminal-pre {
+      margin: 0;
+      padding: 14px 16px;
+      background: transparent;
+      border: none;
+      overflow-x: auto;
+      white-space: pre;
+      line-height: 1.5;
+    }
+    .terminal-pre code {
+      color: ${options.style === 'document' ? '#333' : '#e0e0e0'};
+      background: transparent;
+      padding: 0;
+      font-size: 9pt;
+    }
+    /* highlight.js token colors */
+    .hljs-keyword { color: ${options.style === 'document' ? '#7b1fa2' : '#c678dd'}; }
+    .hljs-string { color: ${options.style === 'document' ? '#1b5e20' : '#98c379'}; }
+    .hljs-number { color: ${options.style === 'document' ? '#e65100' : '#d19a66'}; }
+    .hljs-comment { color: ${options.style === 'document' ? '#757575' : '#5c6370'}; font-style: italic; }
+    .hljs-function { color: ${options.style === 'document' ? '#1565c0' : '#61afef'}; }
+    .hljs-title { color: ${options.style === 'document' ? '#1565c0' : '#61afef'}; }
+    .hljs-built_in { color: ${options.style === 'document' ? '#00695c' : '#56b6c2'}; }
+    .hljs-type { color: ${options.style === 'document' ? '#bf360c' : '#e5c07b'}; }
+    .hljs-attr { color: ${options.style === 'document' ? '#e65100' : '#d19a66'}; }
+    .hljs-variable { color: ${options.style === 'document' ? '#c62828' : '#e06c75'}; }
+    .hljs-selector-class { color: ${options.style === 'document' ? '#1b5e20' : '#98c379'}; }
+    .hljs-meta { color: ${options.style === 'document' ? '#757575' : '#5c6370'}; }
     a { color: ${options.style === 'document' ? '#111' : '#299a8d'}; text-decoration: ${options.style === 'document' ? 'underline' : 'none'}; cursor: pointer; }
     a[href^="#"] { color: ${options.style === 'document' ? '#333' : '#299a8d'}; text-decoration: none; border-bottom: 1px dotted currentColor; }
     table { border-collapse: collapse; width: 100%; page-break-inside: avoid; }
