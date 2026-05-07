@@ -71,7 +71,7 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
       ],
       content: '',
       onUpdate: ({ editor }) => {
-        const markdown = editor.storage.markdown.getMarkdown();
+        const markdown = editor.storage['markdown'].getMarkdown();
         this.markdownService.setDraftContent(markdown);
       },
       onSelectionUpdate: ({ editor }) => {

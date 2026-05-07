@@ -82,7 +82,7 @@ export const slashCommandItems: SlashCommandItem[] = [
     title: 'Mermaid Diagram',
     icon: '◈',
     command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).command(({ tr, dispatch }) => {
+      editor.chain().focus().deleteRange(range).command(({ tr, dispatch }: { tr: any; dispatch: any }) => {
         if (dispatch) {
           const node = editor.schema.nodes['mermaidBlock'].create({ content: 'graph TD\n  A-->B' });
           tr.replaceSelectionWith(node);
@@ -95,7 +95,7 @@ export const slashCommandItems: SlashCommandItem[] = [
     title: 'LaTeX Formula',
     icon: '∑',
     command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).command(({ tr, dispatch }) => {
+      editor.chain().focus().deleteRange(range).command(({ tr, dispatch }: { tr: any; dispatch: any }) => {
         if (dispatch) {
           const node = editor.schema.nodes['katexBlock'].create({ content: 'E = mc^2' });
           tr.replaceSelectionWith(node);
@@ -110,7 +110,7 @@ export const slashCommandItems: SlashCommandItem[] = [
     command: ({ editor, range }) => {
       const url = prompt('URL de la vidéo:');
       if (url) {
-        editor.chain().focus().deleteRange(range).command(({ tr, dispatch }) => {
+        editor.chain().focus().deleteRange(range).command(({ tr, dispatch }: { tr: any; dispatch: any }) => {
           if (dispatch) {
             const node = editor.schema.nodes['embedBlock'].create({ src: url });
             tr.replaceSelectionWith(node);

@@ -28,9 +28,9 @@ export class PdfService {
     }
 
     const pdfOptions = {
-      margin: options.style === 'document' ? [20, 20, 20, 20] : [10, 10, 10, 10],
+      margin: options.style === 'document' ? [20, 20, 20, 20] as [number, number, number, number] : [10, 10, 10, 10] as [number, number, number, number],
       filename: options.fileName.endsWith('.pdf') ? options.fileName : `${options.fileName}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: {
         unit: 'mm',
