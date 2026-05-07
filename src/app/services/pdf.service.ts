@@ -16,123 +16,127 @@ export class PdfService {
   private markdownService = inject(MarkdownService);
 
   async exportToPdf(contentElement: HTMLElement, options: PdfExportOptions): Promise<void> {
-    const html2pdf = (await import('html2pdf.js')).default;
+    const printContent = contentElement.cloneNode(true) as HTMLElement;
 
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'fixed';
-    wrapper.style.top = '0';
-    wrapper.style.left = '0';
-    wrapper.style.width = options.orientation === 'landscape' ? '297mm' : '210mm';
-    wrapper.style.zIndex = '-9999';
-    wrapper.style.opacity = '0';
-    wrapper.style.overflow = 'visible';
-    wrapper.style.pointerEvents = 'none';
-    document.body.appendChild(wrapper);
+    if (options.style === 'document') {
+      this.applyDocumentStyle(printContent);
+    }
 
-    const container = document.createElement('div');
-    container.innerHTML = contentElement.innerHTML;
-    container.style.background = '#ffffff';
-    container.style.color = '#111111';
-    container.style.padding = '20px';
-    container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    container.style.fontSize = '14px';
-    container.style.lineHeight = '1.6';
-    container.style.width = '100%';
-
-    // Force all text to be dark for PDF
-    container.querySelectorAll('*').forEach(el => {
-      const htmlEl = el as HTMLElement;
-      const computed = window.getComputedStyle(htmlEl);
-      if (computed.color) {
-        htmlEl.style.color = htmlEl.style.color || '#111111';
-      }
-    });
-
-    wrapper.appendChild(container);
-
-    this.applyStyle(container, options);
-
+    let tocHtml = '';
     if (options.includeToc) {
-      const tocHtml = this.generateTocHtml(container);
-      container.insertAdjacentHTML('afterbegin', tocHtml);
+      tocHtml = this.generateTocHtml(printContent);
     }
 
-    // Force wrapper visible for html2canvas capture
-    wrapper.style.opacity = '1';
+    const pageSize = options.pageFormat === 'a4' ? '210mm 297mm' : '8.5in 11in';
+    const orientation = options.orientation === 'landscape' ? 'landscape' : 'portrait';
 
-    // Small delay to ensure paint
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    const pdfOptions = {
-      margin: options.style === 'document' ? [20, 20, 20, 20] as [number, number, number, number] : [10, 10, 10, 10] as [number, number, number, number],
-      filename: options.fileName.endsWith('.pdf') ? options.fileName : `${options.fileName}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      },
-      jsPDF: {
-        unit: 'mm',
-        format: options.pageFormat,
-        orientation: options.orientation,
-      },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-    };
-
-    try {
-      await html2pdf().set(pdfOptions).from(container).save();
-    } finally {
-      document.body.removeChild(wrapper);
+    const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${options.fileName}</title>
+  <style>
+    @page {
+      size: ${options.orientation === 'landscape' ? (options.pageFormat === 'a4' ? '297mm 210mm' : '11in 8.5in') : pageSize};
+      margin: ${options.style === 'document' ? '25mm' : '15mm'};
     }
+    body {
+      font-family: ${options.style === 'document' ? 'Georgia, "Times New Roman", serif' : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'};
+      font-size: ${options.style === 'document' ? '12pt' : '10pt'};
+      line-height: ${options.style === 'document' ? '1.8' : '1.6'};
+      color: #111;
+      background: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      color: ${options.style === 'document' ? '#111' : '#299a8d'};
+      page-break-after: avoid;
+    }
+    h1, h2 { margin-top: 1.5em; }
+    pre, code { font-family: "JetBrains Mono", "Fira Code", Consolas, monospace; }
+    pre {
+      background: ${options.style === 'document' ? '#f5f5f5' : '#1a1a2e'};
+      color: ${options.style === 'document' ? '#333' : '#e0e0e0'};
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 9pt;
+      page-break-inside: avoid;
+      ${options.style === 'document' ? 'border: 1px solid #ddd;' : ''}
+    }
+    .terminal-block {
+      background: ${options.style === 'document' ? '#f5f5f5' : '#1a1a2e'};
+      border-radius: 6px;
+      padding: 12px;
+      margin: 1em 0;
+      page-break-inside: avoid;
+      ${options.style === 'document' ? 'border: 1px solid #ddd;' : ''}
+    }
+    .terminal-header { ${options.style === 'document' ? 'display: none;' : ''} }
+    .terminal-pre { margin: 0; background: transparent; border: none; padding: 0; }
+    a { color: ${options.style === 'document' ? '#111' : '#299a8d'}; text-decoration: ${options.style === 'document' ? 'underline' : 'none'}; }
+    table { border-collapse: collapse; width: 100%; page-break-inside: avoid; }
+    td, th { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f5f5f5; }
+    img { max-width: 100%; page-break-inside: avoid; }
+    blockquote { border-left: 3px solid ${options.style === 'document' ? '#999' : '#299a8d'}; padding-left: 1em; margin-left: 0; color: #555; }
+    ${options.pageNumbers ? `
+    @page { @bottom-center { content: counter(page); font-size: 9pt; color: #999; } }
+    ` : ''}
+    ${options.headerFileName ? `
+    @page { @top-center { content: "${options.fileName}"; font-size: 9pt; color: #999; } }
+    ` : ''}
+    .toc-page { page-break-after: always; }
+    .toc-page h1 { text-align: center; }
+    .toc-page ul { list-style: none; padding: 0; line-height: 2.2; }
+  </style>
+</head>
+<body>
+  ${tocHtml}
+  ${printContent.innerHTML}
+</body>
+</html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) {
+      document.body.removeChild(iframe);
+      return;
+    }
+
+    iframeDoc.open();
+    iframeDoc.write(htmlContent);
+    iframeDoc.close();
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    iframe.contentWindow?.print();
+
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
   }
 
-  private applyStyle(container: HTMLElement, options: PdfExportOptions): void {
-    if (options.style === 'document') {
-      container.style.fontFamily = 'Georgia, "Times New Roman", serif';
-      container.style.color = '#111';
-      container.style.lineHeight = '1.8';
-      container.style.fontSize = '12pt';
-
-      container.querySelectorAll('.terminal-block').forEach(block => {
-        const el = block as HTMLElement;
-        el.style.background = '#f5f5f5';
-        el.style.border = '1px solid #ddd';
-        el.style.borderRadius = '4px';
-        el.style.padding = '12px';
-        const header = el.querySelector('.terminal-header') as HTMLElement;
-        if (header) header.style.display = 'none';
-      });
-
-      container.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(heading => {
-        const el = heading as HTMLElement;
-        el.style.color = '#111';
-        el.style.fontFamily = 'Georgia, "Times New Roman", serif';
-      });
-
-      container.querySelectorAll('a').forEach(link => {
-        const el = link as HTMLElement;
-        el.style.color = '#111';
-        el.style.textDecoration = 'underline';
-      });
-
-      container.querySelectorAll('h1, h2').forEach(el => {
-        (el as HTMLElement).style.pageBreakBefore = 'auto';
-        (el as HTMLElement).style.marginTop = '24pt';
-      });
-    }
-
-    if (options.pageNumbers) {
-      container.style.counterReset = 'page';
-    }
+  private applyDocumentStyle(container: HTMLElement): void {
+    container.querySelectorAll('.terminal-header').forEach(header => {
+      (header as HTMLElement).style.display = 'none';
+    });
   }
 
   private generateTocHtml(container: HTMLElement): string {
     const headings = container.querySelectorAll('h1, h2, h3');
-    let tocHtml = '<div style="page-break-after: always; margin-bottom: 2rem;">';
-    tocHtml += '<h1 style="text-align: center; margin-bottom: 2rem;">Table des matières</h1>';
-    tocHtml += '<ul style="list-style: none; padding: 0; line-height: 2;">';
+    let tocHtml = '<div class="toc-page">';
+    tocHtml += '<h1>Table des matières</h1>';
+    tocHtml += '<ul>';
 
     headings.forEach(heading => {
       const level = parseInt(heading.tagName[1]);
