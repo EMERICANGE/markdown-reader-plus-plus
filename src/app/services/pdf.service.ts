@@ -36,6 +36,11 @@ export class PdfService {
   <meta charset="utf-8">
   <title>${options.fileName}</title>
   <style>
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
     @page {
       size: ${options.orientation === 'landscape' ? (options.pageFormat === 'a4' ? '297mm 210mm' : '11in 8.5in') : pageSize};
       margin: ${options.style === 'document' ? '25mm' : '15mm'};
