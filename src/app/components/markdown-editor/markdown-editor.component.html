@@ -1,0 +1,83 @@
+<div class="editor-container">
+  <!-- Fixed Toolbar -->
+  <div class="editor-toolbar">
+    <!-- Text Group -->
+    <div class="toolbar-group">
+      <button class="toolbar-btn" (click)="setHeading(1)" [class.active]="editor.isActive('heading', {level: 1})" title="Heading 1">H1</button>
+      <button class="toolbar-btn" (click)="setHeading(2)" [class.active]="editor.isActive('heading', {level: 2})" title="Heading 2">H2</button>
+      <button class="toolbar-btn" (click)="setHeading(3)" [class.active]="editor.isActive('heading', {level: 3})" title="Heading 3">H3</button>
+    </div>
+
+    <span class="toolbar-divider"></span>
+
+    <!-- Format Group -->
+    <div class="toolbar-group">
+      <button class="toolbar-btn" (click)="toggleBold()" [class.active]="editor.isActive('bold')" title="Gras (Ctrl+B)"><b>B</b></button>
+      <button class="toolbar-btn" (click)="toggleItalic()" [class.active]="editor.isActive('italic')" title="Italique (Ctrl+I)"><i>I</i></button>
+      <button class="toolbar-btn" (click)="toggleUnderline()" [class.active]="editor.isActive('underline')" title="Souligné (Ctrl+U)"><u>U</u></button>
+      <button class="toolbar-btn" (click)="toggleStrike()" [class.active]="editor.isActive('strike')" title="Barré"><s>S</s></button>
+      <button class="toolbar-btn color-btn" title="Couleur du texte">
+        <span class="color-indicator" style="background: currentColor;"></span>
+        <input type="color" (input)="setColor($any($event.target).value)" class="color-input">
+        A
+      </button>
+      <button class="toolbar-btn color-btn" title="Surlignage">
+        <input type="color" value="#ffff00" (input)="toggleHighlight($any($event.target).value)" class="color-input">
+        <span class="highlight-icon">H</span>
+      </button>
+    </div>
+
+    <span class="toolbar-divider"></span>
+
+    <!-- Lists Group -->
+    <div class="toolbar-group">
+      <button class="toolbar-btn" (click)="toggleBulletList()" [class.active]="editor.isActive('bulletList')" title="Liste à puces">&#x2022;</button>
+      <button class="toolbar-btn" (click)="toggleOrderedList()" [class.active]="editor.isActive('orderedList')" title="Liste numérotée">1.</button>
+      <button class="toolbar-btn" (click)="toggleTaskList()" [class.active]="editor.isActive('taskList')" title="Checklist">&#x2611;</button>
+    </div>
+
+    <span class="toolbar-divider"></span>
+
+    <!-- Blocks Group -->
+    <div class="toolbar-group">
+      <button class="toolbar-btn" (click)="toggleBlockquote()" [class.active]="editor.isActive('blockquote')" title="Citation">&#x275D;</button>
+      <button class="toolbar-btn" (click)="toggleCodeBlock()" [class.active]="editor.isActive('codeBlock')" title="Bloc de code">&lt;/&gt;</button>
+      <button class="toolbar-btn" (click)="insertTable()" title="Tableau">&#x25A6;</button>
+      <button class="toolbar-btn" (click)="setHorizontalRule()" title="Séparateur">&mdash;</button>
+    </div>
+
+    <span class="toolbar-divider"></span>
+
+    <!-- Insert Group -->
+    <div class="toolbar-group">
+      <button class="toolbar-btn" (click)="insertImage()" title="Image">&#x1F5BC;</button>
+      <button class="toolbar-btn" (click)="insertLink()" title="Lien">&#x1F517;</button>
+      <button class="toolbar-btn" (click)="insertMermaid()" title="Diagramme Mermaid">&#x25C8;</button>
+      <button class="toolbar-btn" (click)="insertKatex()" title="Formule LaTeX">&#x2211;</button>
+      <button class="toolbar-btn" (click)="insertEmbed()" title="Embed vidéo">&#x25B6;</button>
+    </div>
+
+    <span class="toolbar-divider"></span>
+
+    <!-- Actions Group -->
+    <div class="toolbar-group">
+      <button class="toolbar-btn" (click)="undo()" title="Annuler (Ctrl+Z)">&#x21A9;</button>
+      <button class="toolbar-btn" (click)="redo()" title="Rétablir (Ctrl+Y)">&#x21AA;</button>
+      <button class="toolbar-btn save-btn" (click)="downloadFile()" title="Télécharger .md (Ctrl+S)">&#x1F4BE;</button>
+    </div>
+  </div>
+
+  <!-- TipTap Editor -->
+  <div class="editor-content">
+    <tiptap-editor [editor]="editor"></tiptap-editor>
+
+    <!-- Bubble Menu -->
+    <tiptap-bubble-menu [editor]="editor" class="bubble-menu">
+      <button (click)="toggleBold()" [class.active]="editor.isActive('bold')"><b>B</b></button>
+      <button (click)="toggleItalic()" [class.active]="editor.isActive('italic')"><i>I</i></button>
+      <button (click)="toggleUnderline()" [class.active]="editor.isActive('underline')"><u>U</u></button>
+      <button (click)="insertLink()">&#x1F517;</button>
+      <button (click)="toggleCodeBlock()">code</button>
+    </tiptap-bubble-menu>
+  </div>
+</div>
