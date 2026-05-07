@@ -75,7 +75,8 @@ export class PdfService {
     }
     .terminal-header { ${options.style === 'document' ? 'display: none;' : ''} }
     .terminal-pre { margin: 0; background: transparent; border: none; padding: 0; }
-    a { color: ${options.style === 'document' ? '#111' : '#299a8d'}; text-decoration: ${options.style === 'document' ? 'underline' : 'none'}; }
+    a { color: ${options.style === 'document' ? '#111' : '#299a8d'}; text-decoration: ${options.style === 'document' ? 'underline' : 'none'}; cursor: pointer; }
+    a[href^="#"] { color: ${options.style === 'document' ? '#333' : '#299a8d'}; text-decoration: none; border-bottom: 1px dotted currentColor; }
     table { border-collapse: collapse; width: 100%; page-break-inside: avoid; }
     td, th { border: 1px solid #ddd; padding: 8px; }
     th { background: #f5f5f5; }
@@ -133,7 +134,7 @@ export class PdfService {
   }
 
   private generateTocHtml(container: HTMLElement): string {
-    const headings = container.querySelectorAll('h1, h2, h3');
+    const headings = container.querySelectorAll('h1[id], h2[id], h3[id]');
     let tocHtml = '<div class="toc-page">';
     tocHtml += '<h1>Table des matières</h1>';
     tocHtml += '<ul>';
@@ -142,7 +143,8 @@ export class PdfService {
       const level = parseInt(heading.tagName[1]);
       const indent = (level - 1) * 20;
       const text = heading.textContent || '';
-      tocHtml += `<li style="padding-left: ${indent}px; font-size: ${level === 1 ? '14pt' : '11pt'}; font-weight: ${level <= 2 ? 'bold' : 'normal'};">${text}</li>`;
+      const id = heading.getAttribute('id') || '';
+      tocHtml += `<li style="padding-left: ${indent}px; font-size: ${level === 1 ? '14pt' : '11pt'}; font-weight: ${level <= 2 ? 'bold' : 'normal'};"><a href="#${id}" style="text-decoration: none; color: inherit;">${text}</a></li>`;
     });
 
     tocHtml += '</ul></div>';
