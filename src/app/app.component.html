@@ -26,6 +26,14 @@
         [disabled]="!activeFile()">
       </p-button>
       <p-button
+        icon="pi pi-file-import"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        (onClick)="openPdfImport()"
+        pTooltip="Importer un PDF">
+      </p-button>
+      <p-button
         icon="pi pi-file-pdf"
         [rounded]="true"
         [text]="true"
@@ -70,4 +78,5 @@
   </aside>
 
   <app-pdf-export-dialog></app-pdf-export-dialog>
+  <app-pdf-import-dialog></app-pdf-import-dialog>
 </div>

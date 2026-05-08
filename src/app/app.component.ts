@@ -10,6 +10,7 @@ import { MarkdownViewerComponent } from './components/markdown-viewer/markdown-v
 import { MarkdownEditorComponent } from './components/markdown-editor/markdown-editor.component';
 import { SearchBarComponent } from './components/search-bar/search-bar.component';
 import { PdfExportDialogComponent } from './components/pdf-export-dialog/pdf-export-dialog.component';
+import { PdfImportDialogComponent } from './components/pdf-import-dialog/pdf-import-dialog.component';
 import { EditorStatusBarComponent } from './components/editor-status-bar/editor-status-bar.component';
 import { MarkdownService } from './services/markdown.service';
 
@@ -28,6 +29,7 @@ import { MarkdownService } from './services/markdown.service';
     MarkdownEditorComponent,
     SearchBarComponent,
     PdfExportDialogComponent,
+    PdfImportDialogComponent,
     EditorStatusBarComponent,
   ],
   templateUrl: './app.component.html',
@@ -36,6 +38,7 @@ import { MarkdownService } from './services/markdown.service';
 export class AppComponent {
   @ViewChild(FileLoaderComponent) fileLoader!: FileLoaderComponent;
   @ViewChild(PdfExportDialogComponent) pdfDialog!: PdfExportDialogComponent;
+  @ViewChild(PdfImportDialogComponent) pdfImportDialog!: PdfImportDialogComponent;
 
   private markdownService = inject(MarkdownService);
 
@@ -65,6 +68,10 @@ export class AppComponent {
 
   openPdfExport(): void {
     this.pdfDialog.open();
+  }
+
+  openPdfImport(): void {
+    this.pdfImportDialog.open();
   }
 
   onDragOver(event: DragEvent): void {
