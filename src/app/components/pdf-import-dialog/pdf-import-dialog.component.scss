@@ -1,0 +1,70 @@
+// src/app/components/pdf-import-dialog/pdf-import-dialog.component.scss
+.import-section {
+  margin-bottom: 1.5rem;
+}
+
+.section-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.file-select-area {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--red-50);
+  border: 1px solid var(--red-200);
+  border-radius: 6px;
+  color: var(--red-700);
+  margin-bottom: 1rem;
+}
+
+:host-context(.dark-theme) .error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--red-300);
+}
+
+.progress-section {
+  margin: 1.5rem 0;
+}
+
+.status-text {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+.preview-section {
+  margin-top: 1rem;
+}
+
+.preview-content {
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: 6px;
+  padding: 1rem;
+
+  pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.8rem;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    line-height: 1.5;
+  }
+}

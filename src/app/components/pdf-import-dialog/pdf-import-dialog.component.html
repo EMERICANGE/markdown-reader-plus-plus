@@ -1,0 +1,68 @@
+<!-- src/app/components/pdf-import-dialog/pdf-import-dialog.component.html -->
+<p-dialog
+  header="Importer un PDF"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [closable]="true"
+  [draggable]="false">
+
+  <!-- File Selection -->
+  @if (!isProcessing() && !importReady()) {
+    <div class="import-section">
+      <label class="section-label">Sélectionnez un fichier PDF</label>
+      <div class="file-select-area">
+        <input
+          type="file"
+          accept=".pdf,application/pdf"
+          (change)="onFileSelected($event)"
+          #fileInput
+          class="hidden-input">
+        <p-button
+          label="Choisir un fichier"
+          icon="pi pi-file-pdf"
+          (onClick)="fileInput.click()">
+        </p-button>
+      </div>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (error()) {
+    <div class="error-message">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <!-- Progress -->
+  @if (isProcessing()) {
+    <div class="progress-section">
+      <p-progressBar [value]="progress()" [showValue]="true"></p-progressBar>
+      <p class="status-text">{{ statusMessage() }}</p>
+    </div>
+  }
+
+  <!-- Preview -->
+  @if (importReady() && previewContent()) {
+    <div class="preview-section">
+      <label class="section-label">Aperçu du markdown généré</label>
+      <div class="preview-content">
+        <pre>{{ previewContent() }}</pre>
+      </div>
+    </div>
+  }
+
+  <!-- Footer -->
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" [text]="true" (onClick)="close()"></p-button>
+    @if (importReady()) {
+      <p-button
+        label="Importer"
+        icon="pi pi-check"
+        (onClick)="confirmImport()">
+      </p-button>
+    }
+  </ng-template>
+</p-dialog>
