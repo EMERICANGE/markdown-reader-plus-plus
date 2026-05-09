@@ -1,4 +1,3 @@
-// src/app/services/markdown-reconstructor.service.ts
 import { Injectable } from '@angular/core';
 
 export interface PdfTextItem {
@@ -21,7 +20,6 @@ interface TextLine {
   items: PdfTextItem[];
   y: number;
   fontSize: number;
-  fontName: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -30,37 +28,37 @@ export class MarkdownReconstructorService {
   reconstruct(pages: PdfPageData[]): string {
     const allItems = pages.flatMap(p => p.textItems);
     const fontSizeMap = this.buildFontSizeMap(allItems);
+    const bodySize = this.findBodySize(allItems);
     const markdownParts: string[] = [];
 
     for (const page of pages) {
-      const lines = this.groupIntoLines(page.textItems);
-      const pageMarkdown = this.processLines(lines, fontSizeMap);
-      markdownParts.push(pageMarkdown);
+      const lines = this.groupIntoLines(page.textItems, bodySize);
+      const pageMarkdown = this.processLines(lines, fontSizeMap, bodySize);
+      if (pageMarkdown) {
+        markdownParts.push(pageMarkdown);
+      }
 
-      if (page.imageRefs.length > 0) {
-        for (const imgUrl of page.imageRefs) {
-          markdownParts.push(`\n![](${imgUrl})\n`);
-        }
+      for (const imgUrl of page.imageRefs) {
+        markdownParts.push(`![](${imgUrl})`);
       }
     }
 
-    return markdownParts.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    return markdownParts.join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
   }
 
   private buildFontSizeMap(items: PdfTextItem[]): Map<number, 'h1' | 'h2' | 'h3' | 'body'> {
-    const sizes = [...new Set(items.map(i => i.fontSize))].sort((a, b) => b - a);
     const map = new Map<number, 'h1' | 'h2' | 'h3' | 'body'>();
-
-    if (sizes.length === 0) return map;
+    if (items.length === 0) return map;
 
     const bodySize = this.findBodySize(items);
 
+    const sizes = [...new Set(items.map(i => i.fontSize))];
     for (const size of sizes) {
-      if (size > bodySize * 1.8) {
+      if (size > bodySize * 1.6) {
         map.set(size, 'h1');
-      } else if (size > bodySize * 1.4) {
+      } else if (size > bodySize * 1.3) {
         map.set(size, 'h2');
-      } else if (size > bodySize * 1.15) {
+      } else if (size > bodySize * 1.1) {
         map.set(size, 'h3');
       } else {
         map.set(size, 'body');
@@ -86,8 +84,11 @@ export class MarkdownReconstructorService {
     return bodySize;
   }
 
-  private groupIntoLines(items: PdfTextItem[]): TextLine[] {
+  private groupIntoLines(items: PdfTextItem[], bodySize: number): TextLine[] {
     if (items.length === 0) return [];
+
+    const lineHeight = bodySize || 12;
+    const tolerance = lineHeight * 0.6;
 
     const sorted = [...items].sort((a, b) => b.y - a.y || a.x - b.x);
     const lines: TextLine[] = [];
@@ -95,80 +96,108 @@ export class MarkdownReconstructorService {
       items: [sorted[0]],
       y: sorted[0].y,
       fontSize: sorted[0].fontSize,
-      fontName: sorted[0].fontName,
     };
 
     for (let i = 1; i < sorted.length; i++) {
       const item = sorted[i];
-      if (Math.abs(item.y - currentLine.y) < item.height * 0.5) {
+      if (Math.abs(item.y - currentLine.y) <= tolerance) {
         currentLine.items.push(item);
+        currentLine.fontSize = Math.max(currentLine.fontSize, item.fontSize);
       } else {
+        currentLine.items.sort((a, b) => a.x - b.x);
         lines.push(currentLine);
-        currentLine = { items: [item], y: item.y, fontSize: item.fontSize, fontName: item.fontName };
+        currentLine = { items: [item], y: item.y, fontSize: item.fontSize };
       }
     }
+    currentLine.items.sort((a, b) => a.x - b.x);
     lines.push(currentLine);
-
-    for (const line of lines) {
-      line.items.sort((a, b) => a.x - b.x);
-    }
 
     return lines;
   }
 
-  private processLines(lines: TextLine[], fontSizeMap: Map<number, string>): string {
-    const output: string[] = [];
+  private processLines(lines: TextLine[], fontSizeMap: Map<number, string>, bodySize: number): string {
+    const blocks: string[] = [];
     let i = 0;
 
     while (i < lines.length) {
       const line = lines[i];
-      const lineText = this.buildLineText(line.items);
-      const strippedText = lineText.replace(/\*+/g, '').trim();
+      const lineText = this.buildLineText(line.items, bodySize);
+      const plainText = this.stripFormatting(lineText);
       const headingLevel = fontSizeMap.get(line.fontSize);
 
-      if (this.isBulletLine(strippedText)) {
-        const bulletText = this.extractBulletText(strippedText);
-        output.push(`- ${bulletText}`);
+      if (this.isBulletLine(plainText)) {
+        let listBlock = `- ${this.extractBulletText(plainText)}`;
         i++;
-      } else if (this.isNumberedLine(strippedText)) {
-        output.push(strippedText);
+        while (i < lines.length) {
+          const nextPlain = this.stripFormatting(this.buildLineText(lines[i].items, bodySize));
+          if (!this.isBulletLine(nextPlain)) break;
+          listBlock += `\n- ${this.extractBulletText(nextPlain)}`;
+          i++;
+        }
+        blocks.push(listBlock);
+      } else if (this.isNumberedLine(plainText)) {
+        let listBlock = plainText;
         i++;
+        while (i < lines.length) {
+          const nextPlain = this.stripFormatting(this.buildLineText(lines[i].items, bodySize));
+          if (!this.isNumberedLine(nextPlain)) break;
+          listBlock += `\n${nextPlain}`;
+          i++;
+        }
+        blocks.push(listBlock);
       } else if (headingLevel === 'h1' || headingLevel === 'h2' || headingLevel === 'h3') {
         const prefix = headingLevel === 'h1' ? '# ' : headingLevel === 'h2' ? '## ' : '### ';
-        output.push(`\n${prefix}${strippedText}\n`);
+        blocks.push(`${prefix}${plainText}`);
         i++;
       } else {
         let paragraph = lineText;
+        let prevLine = line;
         i++;
         while (i < lines.length) {
           const nextLine = lines[i];
-          const nextText = this.buildLineText(nextLine.items).replace(/\*+/g, '').trim();
+          const nextLineText = this.buildLineText(nextLine.items, bodySize);
+          const nextPlain = this.stripFormatting(nextLineText);
           const nextHeading = fontSizeMap.get(nextLine.fontSize);
-          const gap = line.y - nextLine.y;
 
           if (nextHeading && nextHeading !== 'body') break;
-          if (this.isBulletLine(nextText)) break;
-          if (this.isNumberedLine(nextText)) break;
-          if (gap > line.fontSize * 2.5) break;
+          if (this.isBulletLine(nextPlain)) break;
+          if (this.isNumberedLine(nextPlain)) break;
 
-          paragraph += ' ' + this.buildLineText(nextLine.items);
+          const gap = prevLine.y - nextLine.y;
+          const expectedLineGap = bodySize * 1.4;
+          if (gap > expectedLineGap * 1.8) break;
+
+          paragraph += ' ' + nextLineText;
+          prevLine = nextLine;
           i++;
         }
-        output.push(paragraph.trim());
+        blocks.push(paragraph.trim());
       }
     }
 
-    return output.join('\n');
+    return blocks.join('\n\n');
   }
 
-  private buildLineText(items: PdfTextItem[]): string {
+  private buildLineText(items: PdfTextItem[], bodySize: number): string {
+    if (items.length === 0) return '';
+
     let result = '';
-    for (const item of items) {
+    const spaceWidth = bodySize * 0.3;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
       const text = item.str;
-      if (!text.trim()) {
-        result += ' ';
-        continue;
+      if (!text.trim()) continue;
+
+      if (i > 0) {
+        const prev = items[i - 1];
+        const prevEnd = prev.x + prev.width;
+        const gap = item.x - prevEnd;
+        if (gap > spaceWidth) {
+          result += ' ';
+        }
       }
+
       const isBold = /bold/i.test(item.fontName);
       const isItalic = /italic|oblique/i.test(item.fontName);
 
@@ -185,8 +214,12 @@ export class MarkdownReconstructorService {
     return result;
   }
 
+  private stripFormatting(text: string): string {
+    return text.replace(/\*{1,3}/g, '').trim();
+  }
+
   private isBulletLine(text: string): boolean {
-    return /^[•\-\*]\s+/.test(text);
+    return /^[•\-\*‣▪]\s+/.test(text) || /^[•\-\*‣▪](?=[A-Za-zÀ-ÿ])/.test(text);
   }
 
   private isNumberedLine(text: string): boolean {
@@ -194,6 +227,6 @@ export class MarkdownReconstructorService {
   }
 
   private extractBulletText(text: string): string {
-    return text.replace(/^[•\-\*]\s+/, '');
+    return text.replace(/^[•\-\*‣▪]\s*/, '').trim();
   }
 }

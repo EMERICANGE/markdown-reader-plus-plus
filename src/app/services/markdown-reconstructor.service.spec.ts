@@ -33,9 +33,9 @@ describe('MarkdownReconstructorService', () => {
     const pages: PdfPageData[] = [{
       pageNum: 1,
       textItems: [
-        { str: 'Normal ', fontSize: 12, fontName: 'Arial', x: 50, y: 700, width: 50, height: 12 },
-        { str: 'bold text', fontSize: 12, fontName: 'Arial-Bold', x: 100, y: 700, width: 60, height: 12 },
-        { str: ' and ', fontSize: 12, fontName: 'Arial', x: 160, y: 700, width: 30, height: 12 },
+        { str: 'Normal', fontSize: 12, fontName: 'Arial', x: 50, y: 700, width: 45, height: 12 },
+        { str: 'bold text', fontSize: 12, fontName: 'Arial-Bold', x: 100, y: 700, width: 55, height: 12 },
+        { str: 'and', fontSize: 12, fontName: 'Arial', x: 162, y: 700, width: 22, height: 12 },
         { str: 'italic text', fontSize: 12, fontName: 'Arial-Italic', x: 190, y: 700, width: 70, height: 12 },
       ],
       imageRefs: [],
