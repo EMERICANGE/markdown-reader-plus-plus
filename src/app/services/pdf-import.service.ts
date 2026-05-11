@@ -1,11 +1,7 @@
-// src/app/services/pdf-import.service.ts
 import { Injectable, inject, signal } from '@angular/core';
-import * as pdfjsLib from 'pdfjs-dist';
 import { ImageStorageService } from './image-storage.service';
 import { MarkdownReconstructorService, PdfPageData, PdfTextItem } from './markdown-reconstructor.service';
 import { MarkdownFile } from '../models/markdown-file.model';
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.mjs';
 
 export interface PdfImportResult {
   file: MarkdownFile;
@@ -34,6 +30,9 @@ export class PdfImportService {
     this.isProcessing.set(true);
 
     try {
+      const pdfjsLib = await import('pdfjs-dist');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.mjs';
+
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       const totalPages = pdf.numPages;
@@ -67,9 +66,10 @@ export class PdfImportService {
 
         // Extract embedded images
         const ops = await page.getOperatorList();
+        const OPS = pdfjsLib.OPS;
         let imgIndex = 0;
         for (let i = 0; i < ops.fnArray.length; i++) {
-          if (ops.fnArray[i] === pdfjsLib.OPS.paintImageXObject || ops.fnArray[i] === pdfjsLib.OPS.paintInlineImageXObject) {
+          if (ops.fnArray[i] === OPS.paintImageXObject || ops.fnArray[i] === OPS.paintInlineImageXObject) {
             try {
               const imgName = ops.argsArray[i][0];
               const img = await (page.objs as any).get(imgName);
