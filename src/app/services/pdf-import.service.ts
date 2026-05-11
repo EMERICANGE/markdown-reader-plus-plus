@@ -3,6 +3,11 @@ import { ImageStorageService } from './image-storage.service';
 import { MarkdownReconstructorService, PdfPageData, PdfTextItem } from './markdown-reconstructor.service';
 import { MarkdownFile } from '../models/markdown-file.model';
 
+export interface PdfImportOptions {
+  pageStart?: number;
+  pageEnd?: number;
+}
+
 export interface PdfImportResult {
   file: MarkdownFile;
   pageCount: number;
@@ -18,8 +23,20 @@ export class PdfImportService {
   readonly statusMessage = signal<string>('');
   readonly error = signal<string | null>(null);
   readonly isProcessing = signal<boolean>(false);
+  readonly totalPages = signal<number>(0);
+  readonly needsPageSelection = signal<boolean>(false);
 
-  async importPdf(file: File): Promise<PdfImportResult | null> {
+  async getPageCount(file: File): Promise<number> {
+    const pdfjsLib = await import('pdfjs-dist');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.mjs';
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const count = pdf.numPages;
+    pdf.destroy();
+    return count;
+  }
+
+  async importPdf(file: File, options?: PdfImportOptions): Promise<PdfImportResult | null> {
     this.reset();
 
     if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
@@ -36,15 +53,20 @@ export class PdfImportService {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       const totalPages = pdf.numPages;
+      this.totalPages.set(totalPages);
+      const startPage = options?.pageStart ?? 1;
+      const endPage = Math.min(options?.pageEnd ?? totalPages, totalPages);
       const fileHash = this.hashString(file.name + file.size);
       const pages: PdfPageData[] = [];
       const ocrPages: number[] = [];
+      const pagesToProcess = endPage - startPage + 1;
 
       await this.imageStorage.init();
 
-      for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-        this.statusMessage.set(`Extraction page ${pageNum}/${totalPages}…`);
-        this.progress.set(Math.round((pageNum / totalPages) * 80));
+      for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
+        const pageIndex = pageNum - startPage + 1;
+        this.statusMessage.set(`Extraction page ${pageIndex}/${pagesToProcess}…`);
+        this.progress.set(Math.round((pageIndex / pagesToProcess) * 80));
 
         const page = await pdf.getPage(pageNum);
         const textContent = await page.getTextContent();
@@ -97,7 +119,7 @@ export class PdfImportService {
         const totalText = textItems.map(i => i.str).join('').trim();
         if (totalText.length < 10) {
           ocrPages.push(pageNum);
-          this.statusMessage.set(`OCR page ${pageNum}/${totalPages}…`);
+          this.statusMessage.set(`OCR page ${pageIndex}/${pagesToProcess}…`);
           const ocrText = await this.performOcr(page, viewport);
           if (ocrText) {
             textItems.push({

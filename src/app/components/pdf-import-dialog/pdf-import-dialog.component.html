@@ -1,4 +1,3 @@
-<!-- src/app/components/pdf-import-dialog/pdf-import-dialog.component.html -->
 <p-dialog
   header="Importer un PDF"
   [visible]="visible()"
@@ -9,7 +8,7 @@
   [draggable]="false">
 
   <!-- File Selection -->
-  @if (!isProcessing() && !importReady()) {
+  @if (!isProcessing() && !importReady() && !showPageSelection()) {
     <div class="import-section">
       <label class="section-label">Sélectionnez un fichier PDF</label>
       <div class="file-select-area">
@@ -25,6 +24,32 @@
           (onClick)="fileInput.click()">
         </p-button>
       </div>
+    </div>
+  }
+
+  <!-- Page Selection for large PDFs -->
+  @if (showPageSelection()) {
+    <div class="import-section">
+      <div class="page-warning">
+        <i class="pi pi-info-circle"></i>
+        <span>Ce PDF contient {{ pageCount() }} pages. Sélectionnez une plage pour limiter le traitement.</span>
+      </div>
+      <div class="page-range">
+        <div class="range-field">
+          <label>Page début</label>
+          <p-inputNumber [(ngModel)]="pageStart" [min]="1" [max]="pageCount()" [showButtons]="true"></p-inputNumber>
+        </div>
+        <div class="range-field">
+          <label>Page fin</label>
+          <p-inputNumber [(ngModel)]="pageEnd" [min]="pageStart" [max]="pageCount()" [showButtons]="true"></p-inputNumber>
+        </div>
+      </div>
+      <p-button
+        label="Lancer l'import"
+        icon="pi pi-play"
+        (onClick)="confirmPageSelection()"
+        styleClass="mt-3">
+      </p-button>
     </div>
   }
 
